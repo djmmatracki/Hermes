@@ -29,5 +29,5 @@ Do realizacji aplikacji beda nam potrzebne:
 Members:
 
 - Patryk Lyczko
-- Rafal Maciarz
+- Rafal Maciasz
 - Dominik Matracki
