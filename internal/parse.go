@@ -45,6 +45,7 @@ func ListPoints() {
 				wc++
 			case *osmpbf.Relation:
 				// Process Relation v.
+				fmt.Println(v.Tags)
 				rc++
 			default:
 				log.Fatalf("unknown type %T\n", v)
