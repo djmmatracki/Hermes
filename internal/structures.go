@@ -5,20 +5,19 @@ package internal
 	-
 */
 type Location struct {
-	Latitude  float32
-	Longitude float32
+	Latitude  float32 `json:"latitude"`
+	Longitude float32 `json:"longitude"`
 }
 
 type category struct {
-	fuelConsumption float32 // Spalanie
-	capacity        int     //
 }
 
 // Truck
 type Truck struct {
-	Id       int
-	Category category
-	Location Location
+	Id              int     `json:"id"`
+	FuelConsumption float32 `json:"fuel"`     // Spalanie
+	Capacity        int     `json:"capacity"` // Pojemnosc w tonach
+	Location        Location
 }
 
 // Fleet
@@ -26,6 +25,6 @@ type Fleet struct {
 	Trucks []Truck
 }
 
-// []Truck
-
 // Order
+// TODO Implement order struct here
+type Order struct{}

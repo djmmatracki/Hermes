@@ -10,8 +10,6 @@ import (
 	"github.com/qedus/osmpbf"
 )
 
-// Don't forget to sync with README.md
-
 func ListPoints() {
 	f, err := os.Open("greater-london-latest.osm.pbf")
 	if err != nil {
@@ -54,6 +52,4 @@ func ListPoints() {
 	}
 
 	fmt.Printf("Nodes: %d, Ways: %d, Relations: %d\n", nc, wc, rc)
-	// Output:
-	// Nodes: 2729006, Ways: 459055, Relations: 12833
 }

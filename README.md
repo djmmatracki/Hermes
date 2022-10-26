@@ -31,3 +31,8 @@ Members:
 - Patryk Lyczko
 - Rafal Maciasz
 - Dominik Matracki
+
+
+- Oplata za autostrade
+- Do ktorej musi zdarzyc na zaladunek
+- Blokujemy drogi
