@@ -9,9 +9,6 @@ type Location struct {
 	Longitude float32 `json:"longitude"`
 }
 
-type category struct {
-}
-
 // Truck
 type Truck struct {
 	Id              int     `json:"id"`

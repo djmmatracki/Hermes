@@ -73,7 +73,6 @@ func ListPoints() (map[int64]([]int64), map[int64]([]float64)) {
 		}
 	}
 
-	fmt.Printf("Nodes: %d, Ways: %d, Relations: %d\n", nc, wc, rc)
 	return map_node_nodes, map_node_LatLon
 }
 
