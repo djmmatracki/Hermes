@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"Hermes/secret" // jakiś secret_file
+	// "Hermes/secret" // jakiś secret_file
 	"context"
-	"fmt"
+	// "fmt"
 	"log"
 	"math"
 
@@ -23,7 +23,7 @@ type Record struct {
 	Neighbours []NeighData
 }
 
-var uri string = fmt.Sprintf("mongodb://%s:%s@%s:%d", secret.Admin, secret.Passwd, secret.Host, secret.Port)
+// var uri string = fmt.Sprintf("mongodb://%s:%s@%s:%d", secret.Admin, secret.Passwd, secret.Host, secret.Port)
 
 func InsertNodes(uri string, dbName string, collectionName string, map_node_nodes map[int64]([]int64), map_node_LatLon map[int64](Location)) {
 	/*
