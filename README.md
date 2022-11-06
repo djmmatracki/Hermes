@@ -25,6 +25,15 @@ Do realizacji aplikacji beda nam potrzebne:
 - Informacje o naszej flocie (koordynaty ciezarowek, rodzaje pojazdow)
 - Dane o zleceniu (koordynaty zaladunkow oraz rozladunkow, rodzaj przewozonego towaru, cena za zlecenie)
 
+# Uzycie
+
+Stworz plik `.env` przyklad znajduje sie w pliku `env.example`. Wypelnij go danymi zwizanymi z baza danych. Aby zaladowac baze danych uzyj komendy `go run scripts/insertion.go grater-london-latest.osm.pbf`. Aby uruchomic serwer uzyj komendy `go run cmd/main.go`. Domyslnie serwer zostanie uruchomiony na `localhost:8000`. Przetestuj dzialanie serwer'a wpisujac dany adres w przegladarke.
+
+# Endpoint's
+
+- GET /truck - zwraca wszystkie ciezarowki we flocie
+- POST /truck - dodaj ciezarowke do floty
+
 
 Members:
 

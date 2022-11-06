@@ -2,89 +2,8 @@ package internal
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"math"
-	"os"
-	"runtime"
-
-	"github.com/qedus/osmpbf"
 )
-
-func ListPoints() (map[int64]([]int64), map[int64]([]float64)) {
-	/*
-		Opens osm.pbf file from folder, decodes it and make Adjacency list (graph) from it and associate Node_ID with connectiong Nodes
-
-		parms:
-			None, in future path to osm.pbf file
-		outputs:
-			returns map_node_nodes - adjacency list in format: map[int]([]int64)
-					map_node_LatLon - map format Node_ID: [Nodes_IDs connected to Node_ID]
-	*/
-	map_node_nodes := make(map[int64]([]int64))
-	map_node_LatLon := make(map[int64]([]float64))
-
-	f, err := os.Open("greater-london-latest.osm.pbf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	d := osmpbf.NewDecoder(f)
-
-	d.SetBufferSize(osmpbf.MaxBlobSize)
-
-	// start decoding with several goroutines, it is faster
-	err = d.Start(runtime.GOMAXPROCS(-1))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var nc, wc, rc uint64
-	for {
-
-		if v, err := d.Decode(); err == io.EOF {
-			break
-		} else if err != nil {
-			log.Fatal(err)
-		} else {
-			switch v := v.(type) {
-			case *osmpbf.Node:
-				map_node_nodes[int64(v.ID)] = []int64{}
-				map_node_LatLon[v.ID] = []float64{v.Lat, v.Lon}
-				nc++
-			case *osmpbf.Way:
-				// Process Way v.
-				for _, i := range v.NodeIDs {
-					var actual_values = map_node_nodes[int64(i)]
-					for _, j := range v.NodeIDs {
-						if not_contains(actual_values, int64(j)) && i != j {
-							actual_values = append(actual_values, int64(j))
-						}
-					}
-					map_node_nodes[int64(i)] = actual_values
-				}
-				wc++
-			case *osmpbf.Relation:
-				rc++
-			default:
-				log.Fatalf("unknown type %T\n", v)
-			}
-		}
-	}
-
-	fmt.Printf("Nodes: %d, Ways: %d, Relations: %d\n", nc, wc, rc)
-	return map_node_nodes, map_node_LatLon
-}
-
-func not_contains(s []int64, e int64) bool {
-	for _, a := range s {
-		if a == e {
-			return false
-		}
-	}
-	return true
-}
 
 func contains(s []int64, e int64) bool {
 	for _, a := range s {
