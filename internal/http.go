@@ -1,8 +1,6 @@
 package internal
 
 import (
-	"log"
-
 	"github.com/fasthttp/router"
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
@@ -11,11 +9,14 @@ import (
 type HTTPInstanceAPI struct {
 	bind string
 	log  logrus.FieldLogger
+	api  *InstanceAPI
 }
 
-func NewHTTPInstanceAPI(bind string) *HTTPInstanceAPI {
+func NewHTTPInstanceAPI(bind string, log logrus.FieldLogger, api *InstanceAPI) *HTTPInstanceAPI {
 	return &HTTPInstanceAPI{
 		bind: bind,
+		log:  log,
+		api:  api,
 	}
 }
 
@@ -26,13 +27,13 @@ func (i *HTTPInstanceAPI) Run() {
 	r.GET("/", i.handleRoot)
 
 	// Truck endpoints
-	r.POST("truck/", i.addTruck)
-	r.GET("truck/", i.getTruck)
+	r.POST("/truck", i.addTruck)
+	r.GET("/truck", i.getTrucks)
 
 	// Generate optimal
-	r.POST("launch/", i.launch)
+	r.POST("/launch", i.launch)
 
-	log.Fatal(fasthttp.ListenAndServe(i.bind, r.Handler))
+	i.log.Fatal(fasthttp.ListenAndServe(i.bind, r.Handler))
 }
 
 func (i *HTTPInstanceAPI) launch(ctx *fasthttp.RequestCtx) {
@@ -43,15 +44,15 @@ func (i *HTTPInstanceAPI) launch(ctx *fasthttp.RequestCtx) {
 }
 
 func (i *HTTPInstanceAPI) addTruck(ctx *fasthttp.RequestCtx) {
-	ctx.Response.SetBodyString("Welcome to Hermes!")
+	// Get response from api
+	// Parse response
+	// Execute insertion
+	ctx.Response.SetBodyString("Inserted new truck...")
 }
 
-func (i *HTTPInstanceAPI) getTruck(ctx *fasthttp.RequestCtx) {
-	ctx.Response.SetBodyString("Welcome to Hermes!")
-}
-
-func (i *HTTPInstanceAPI) calcuteSingle(ctx *fasthttp.RequestCtx) {
-	ctx.Response.SetBodyString("Welcome to Hermes!")
+func (i *HTTPInstanceAPI) getTrucks(ctx *fasthttp.RequestCtx) {
+	i.api.getTrucks(ctx)
+	ctx.Response.SetBodyString("Get all truck...")
 }
 
 func (i *HTTPInstanceAPI) handleRoot(ctx *fasthttp.RequestCtx) {
