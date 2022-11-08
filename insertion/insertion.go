@@ -1,4 +1,4 @@
-package insertion
+package main
 
 import (
 	"context"
@@ -12,9 +12,9 @@ import (
 	"Hermes/internal"
 
 	"github.com/qedus/osmpbf"
-	"github.com/spf13/viper"
+	// "github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	// "go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[internal.NodeID]internal.Location) {
@@ -50,7 +50,7 @@ func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[inte
 	var nc, wc, rc uint64
 	var location internal.Location
 
-	for i := 0; i < 7610115; i++ {
+	for {
 		if v, err := d.Decode(); err == io.EOF {
 			break
 		} else if err != nil {
@@ -88,6 +88,7 @@ func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[inte
 
 	// Delete nodes with no connections
 	map_node_nodes = delete_empty(map_node_nodes)
+	fmt.Println(map_node_nodes[101958])
 	return map_node_nodes, map_node_LatLon
 }
 
@@ -117,6 +118,7 @@ func insertNodes(collection *mongo.Collection, osmFile string) error {
 	*/
 	var dist float32
 	map_node_nodes, map_node_LatLon := loadData(osmFile)
+	// fmt.Println(map_node_nodes)
 
 	// Inserting
 	for nodeId, neighbours := range map_node_nodes {
@@ -167,36 +169,37 @@ func check_for_valuable_information(tags_map map[string]string, tags_useful []st
 }
 
 func main() {
-	// loadData("greater-london-latest.osm.pbf")
+	var ccc map[internal.NodeID]([]internal.NodeID)
+	ccc, _ = loadData("greater-london-latest.osm.pbf")
+	fmt.Println(ccc[101958])
 	// Envoke insertion here
-	loadData("greater-london-latest.osm.pbf")
-	viper.SetConfigFile(".env")
-	viper.ReadInConfig()
+	// viper.SetConfigFile(".env")
+	// viper.ReadInConfig()
 
-	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
-	mongoURI := fmt.Sprintf(
-		"mongodb+srv://%s:%s@cluster1.yhqlj.mongodb.net/?retryWrites=true&w=majority",
-		viper.GetString(internal.ConfOptMongoUser),
-		viper.GetString(internal.ConfOptMongoPassword))
+	// serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
+	// mongoURI := fmt.Sprintf(
+	// 	"mongodb+srv://%s:%s@cluster1.yhqlj.mongodb.net/?retryWrites=true&w=majority",
+	// 	viper.GetString(internal.ConfOptMongoUser),
+	// 	viper.GetString(internal.ConfOptMongoPassword))
 
-	clientOptions := options.Client().
-		ApplyURI(mongoURI).
-		SetServerAPIOptions(serverAPIOptions)
+	// clientOptions := options.Client().
+	// 	ApplyURI(mongoURI).
+	// 	SetServerAPIOptions(serverAPIOptions)
 
-	client, err := mongo.Connect(context.Background(), clientOptions)
-	collection := client.Database(viper.GetString(internal.ConfOptMongoDatabase)).Collection("main")
+	// client, err := mongo.Connect(context.Background(), clientOptions)
+	// collection := client.Database(viper.GetString(internal.ConfOptMongoDatabase)).Collection("main")
 
-	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
+	// defer func() {
+	// 	if err = client.Disconnect(context.TODO()); err != nil {
+	// 		panic(err)
+	// 	}
+	// }()
 
-	// collection.DeleteMany(context.TODO(), bson.D{})
-	for _, osmFile := range os.Args[1:] {
-		if err := insertNodes(collection, osmFile); err != nil {
-			fmt.Printf("error while inserting data: %v", err)
-			return
-		}
-	}
+	// // collection.DeleteMany(context.TODO(), bson.D{})
+	// for _, osmFile := range os.Args[1:] {
+	// 	if err := insertNodes(collection, osmFile); err != nil {
+	// 		fmt.Printf("error while inserting data: %v", err)
+	// 		return
+	// 	}
+	// }
 }
