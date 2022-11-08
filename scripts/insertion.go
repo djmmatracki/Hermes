@@ -50,7 +50,7 @@ func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[inte
 	var nc, wc, rc uint64
 	var location internal.Location
 
-	for i := 0; i < 7610115; i++ {
+	for {
 		if v, err := d.Decode(); err == io.EOF {
 			break
 		} else if err != nil {
@@ -154,8 +154,9 @@ func check_for_valuable_information(tags_map map[string]string, tags_useful []st
 }
 
 func main() {
-	// Envoke insertion here
 	// loadData("greater-london-latest.osm.pbf")
+	// Envoke insertion here
+	loadData("greater-london-latest.osm.pbf")
 	viper.SetConfigFile(".env")
 	viper.ReadInConfig()
 
