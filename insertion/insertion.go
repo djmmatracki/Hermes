@@ -50,7 +50,7 @@ func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[inte
 	var nc, wc, rc uint64
 	var location internal.Location
 
-	for {
+	for i := 0; i < 7610115; i++ {
 		if v, err := d.Decode(); err == io.EOF {
 			break
 		} else if err != nil {
@@ -64,8 +64,9 @@ func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[inte
 				nc++
 			case *osmpbf.Way:
 				// Process Way v.
-				for _, i := range v.NodeIDs {
-					if check_for_valuable_information(v.Tags, internal.Useful_tags) {
+				// Check if Way Tag is valuable for us
+				if check_for_valuable_information(v.Tags, internal.Useful_tags) {
+					for _, i := range v.NodeIDs {
 						var actual_values = map_node_nodes[internal.NodeID(i)]
 						for _, j := range v.NodeIDs {
 							if not_contains(actual_values, internal.NodeID(j)) && i != j {
@@ -84,8 +85,20 @@ func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[inte
 		}
 
 	}
-	fmt.Println(nc, wc, rc)
+
+	// Delete nodes with no connections
+	map_node_nodes = delete_empty(map_node_nodes)
 	return map_node_nodes, map_node_LatLon
+}
+
+func delete_empty(nodes map[internal.NodeID]([]internal.NodeID)) map[internal.NodeID]([]internal.NodeID) {
+	var node_survival = nodes
+	for k, s := range nodes {
+		if len(s) == 0 {
+			delete(node_survival, k)
+		}
+	}
+	return node_survival
 }
 
 func not_contains(s []internal.NodeID, e internal.NodeID) bool {
