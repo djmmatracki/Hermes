@@ -41,3 +41,7 @@ func (a *InstanceAPI) getTrucks(ctx context.Context) {
 		log.Println(result)
 	}
 }
+
+// func (a *InstanceAPI) compileAStar() {
+
+// }

@@ -25,6 +25,7 @@ func (i *HTTPInstanceAPI) Run() {
 
 	// Root endpoint
 	r.GET("/", i.handleRoot)
+	r.GET("/a-star", i.aStar)
 
 	// Truck endpoints
 	r.POST("/truck", i.addTruck)
@@ -41,6 +42,9 @@ func (i *HTTPInstanceAPI) launch(ctx *fasthttp.RequestCtx) {
 	// Receive list of orders
 	// Loop each truck and each order
 	// For each pair (truck - order) calculate priority
+}
+func (i *HTTPInstanceAPI) aStar(ctx *fasthttp.RequestCtx) {
+	ctx.Response.SetBodyString("Compiling a-star...")
 }
 
 func (i *HTTPInstanceAPI) addTruck(ctx *fasthttp.RequestCtx) {
