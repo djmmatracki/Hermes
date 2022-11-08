@@ -12,9 +12,8 @@ import (
 	"Hermes/internal"
 
 	"github.com/qedus/osmpbf"
-	// "github.com/spf13/viper"
+	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
-	// "go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[internal.NodeID]internal.Location) {
@@ -169,12 +168,10 @@ func check_for_valuable_information(tags_map map[string]string, tags_useful []st
 }
 
 func main() {
-	var ccc map[internal.NodeID]([]internal.NodeID)
-	ccc, _ = loadData("greater-london-latest.osm.pbf")
-	fmt.Println(ccc[101958])
 	// Envoke insertion here
-	// viper.SetConfigFile(".env")
-	// viper.ReadInConfig()
+	// loadData("greater-london-latest.osm.pbf")
+	viper.SetConfigFile(".env")
+	viper.ReadInConfig()
 
 	// serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
 	// mongoURI := fmt.Sprintf(

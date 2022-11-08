@@ -2,7 +2,7 @@ package internal
 
 import (
 	"context"
-	"log"
+	"errors"
 
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,26 +22,36 @@ func NewInstanceAPI(log logrus.FieldLogger, mongoDatabase *mongo.Database) *Inst
 	}
 }
 
-func (a *InstanceAPI) getTrucks(ctx context.Context) {
-	var results []bson.M
+func (a *InstanceAPI) getTrucks(ctx context.Context) ([]Truck, error) {
+	var results []Truck
 	collection := a.mongoDatabase.Collection("truck")
 	cur, err := collection.Find(ctx, bson.D{})
 	if err != nil {
-		log.Println("hello")
-		log.Fatal(err)
-		// return nil, errors.New("")
+		a.log.Fatal(err)
+		return nil, errors.New("")
 	}
 	if err = cur.All(context.TODO(), &results); err != nil {
-		log.Fatal(err)
-		// return nil, errors.New("")
+		a.log.Fatal(err)
+		return nil, errors.New("")
 	}
 
-	log.Println(results)
-	for _, result := range results {
-		log.Println(result)
-	}
+	return results, nil
 }
 
-// func (a *InstanceAPI) compileAStar() {
-
-// }
+func (a *InstanceAPI) singleTruckLaunch(truckID int, origin, destination Location) (*SingleLaunchResponse, error) {
+	// var distanceToOrigin, distanceTo
+	var truck Truck
+	collection := a.mongoDatabase.Collection("truck")
+	result := collection.FindOne(
+		context.TODO(),
+		bson.D{{"truck_id", truckID}},
+	)
+	err := result.Decode(&truck)
+	if err != nil {
+		return nil, err
+	}
+	// Astar(collection, truck_origin, trip_origin Location) -> dystans
+	// Astar(collection, trip_origin, trip_destination Location) -> dystans
+	// origin, destination
+	return nil, nil
+}
