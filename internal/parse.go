@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -15,10 +14,11 @@ func contains(s []int64, e int64) bool {
 }
 
 func reconstruct_path(came_from map[int64]int64, current int64, stop_id int64, start_id int64) []int64 {
+
 	var total_path []int64
 	total_path = append(total_path, current)
 	var came_from_keys []int64
-	for key, _ := range came_from {
+	for key := range came_from {
 		came_from_keys = append(came_from_keys, key)
 	}
 
@@ -37,6 +37,7 @@ func heuritic_a_star(pos1 []float64, pos2 []float64) float64 {
 	return math.Abs(pos1[1]-pos2[1]) + math.Abs(pos1[0]-pos2[0])
 }
 
+// CHANGE THE INPUT VALUES
 func A_star(start int64, stop int64, adjacency_list map[int64]([]int64), nodes_position map[int64]([]float64)) []int64 {
 	/*
 		Classic A_star algorithm, compute the dystans between two points, knowing there's position [Lat, Lon]
@@ -51,9 +52,21 @@ func A_star(start int64, stop int64, adjacency_list map[int64]([]int64), nodes_p
 			- map[int64]int64
 	*/
 
-	if _, ok := adjacency_list[1]; ok {
-		delete(adjacency_list, 1)
-	}
+	/*
+		Opcja 1:
+			- Pobieranie całej caly danych na raz przy działaniu programu:
+				- start
+				- stop
+
+		Opcje 2:
+		Pobieranie danych w czasie działania programu
+			start, stop zostaje
+			fScore dla node_id -> neigbour_id -> dist (cale heuritic_a_star tak)
+			adjecency_list -> pobieranie w postaci neigbours (z bazy) odwolanie do elementów neigbour_id
+
+
+	*/
+
 	// Find Nodes_ID knowing there's position
 	start_id := start
 	stop_id := stop
@@ -68,31 +81,28 @@ func A_star(start int64, stop int64, adjacency_list map[int64]([]int64), nodes_p
 	// fScore is current best guess as how we can get to finish
 	fScore := make(map[int64]float64)
 
-	fmt.Println("1")
-
 	// Makes all cheapest costs to infinity and heuristics update
-	for k, _ := range adjacency_list {
+	for k := range adjacency_list {
 		gScore[k] = math.MaxFloat64
-		fScore[k] = heuritic_a_star(nodes_position[start_id], nodes_position[k])
+		fScore[k] = heuritic_a_star(nodes_position[k], nodes_position[stop_id])
 	}
 
-	fmt.Println("1")
 	// Update the cost to to first location to 0 (we are here) and fScore to distance now
 	gScore[start_id] = 0
-	fScore[start_id] = heuritic_a_star(nodes_position[start_id], nodes_position[stop_id])
+	fScore[start_id] = heuritic_a_star(nodes_position[start_id], nodes_position[stop_id]) // FROM BASE
 
 	// While we can visit neighbour node
 	for len(openSet) > 0 {
-		// From fScore we take node
+		// From fScore we take node with the lowest value of: road to node + distance from node to destination
 		current := get_lowest_node(fScore, openSet)
-		fmt.Println(current)
 		if current == stop_id {
 			return reconstruct_path(cameFrom, current, stop_id, start_id)
 		}
 
+		// Delete actual visiting node
 		openSet = find_index_remove(openSet, current)
 		for _, v := range adjacency_list[current] {
-			var tentative_gScore float64 = gScore[current] + heuritic_a_star(nodes_position[current], nodes_position[v])
+			var tentative_gScore float64 = gScore[current] + heuritic_a_star(nodes_position[current], nodes_position[v]) // FROM BASE
 			if tentative_gScore < gScore[v] {
 				cameFrom[v] = current
 				gScore[v] = tentative_gScore
@@ -140,46 +150,3 @@ func get_lowest_node(fs map[int64]float64, available_nodes []int64) int64 {
 	}
 	return pos
 }
-
-// func get_key_value(pos []float64, nodes_position map[int64]([]float64)) int64 {
-// 	/*
-// 		Function takes value to associate it with the key value and returns the key value for it
-
-// 		parms:
-// 			- pos []float64 - position for which key we want to find
-// 			- nodes_position map[int64]([]float64) - map in which we want to find key knowing the value of that key
-
-// 		returns:
-// 			- int64 - return key value, in our case it will be Node_ID,
-// 						when the value is not existing returns -1
-// 	*/
-// 	var position int64 = 0
-// 	for k, v := range nodes_position {
-// 		if v == pos {
-// 			fmt.Println("udalo sie")
-// 			position = k
-// 		}
-// 	}
-// 	return position
-// }
-
-/*
-How Nodes and Ways are connected:
-
-
-type Node struct {
-	ID   int64
-	Lat  float64
-	Lon  float64
-	Tags map[string]string
-	Info Info
-}
-
-type Way struct {
-	ID      int64
-	Tags    map[string]string
-	NodeIDs []int64
-	Info    Info
-}
-
-*/

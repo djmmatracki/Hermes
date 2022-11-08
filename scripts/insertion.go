@@ -17,27 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	confOptMongoPassword = "MONGO_PASSWORD"
-	confOptMongoUser     = "MONGO_USER"
-	confOptMongoDatabase = "MONGO_DATABASE"
-)
-
-type NodeID int64
-
-type neighbourData struct {
-	// Represents the data about each neighbour
-	NeighbourId NodeID  `bson:"neigbour_id"`
-	Dist        float64 `bson:"dist"`
-}
-
-type record struct {
-	// Represents each record to insert
-	NodeId     NodeID          `bson:"node_id"`
-	Neighbours []neighbourData `bson:"neigbours"`
-}
-
-func loadData(osmFile string) (map[NodeID]([]NodeID), map[NodeID]internal.Location) {
+func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[internal.NodeID]internal.Location) {
 	/*
 		Opens osm.pbf file from folder, decodes it and make Adjacency list (graph) from it and associate Node_ID with connectiong Nodes
 
@@ -47,8 +27,8 @@ func loadData(osmFile string) (map[NodeID]([]NodeID), map[NodeID]internal.Locati
 			returns map_node_nodes - adjacency list in format: map[int]([]int64)
 					map_node_LatLon - map format Node_ID: [Nodes_IDs connected to Node_ID]
 	*/
-	map_node_nodes := make(map[NodeID][]NodeID)
-	map_node_LatLon := make(map[NodeID]internal.Location)
+	map_node_nodes := make(map[internal.NodeID][]internal.NodeID)
+	map_node_LatLon := make(map[internal.NodeID]internal.Location)
 
 	// Read OSM
 	f, err := os.Open(osmFile)
@@ -70,7 +50,7 @@ func loadData(osmFile string) (map[NodeID]([]NodeID), map[NodeID]internal.Locati
 	var nc, wc, rc uint64
 	var location internal.Location
 
-	for {
+	for i := 0; i < 7610115; i++ {
 		if v, err := d.Decode(); err == io.EOF {
 			break
 		} else if err != nil {
@@ -78,20 +58,22 @@ func loadData(osmFile string) (map[NodeID]([]NodeID), map[NodeID]internal.Locati
 		} else {
 			switch v := v.(type) {
 			case *osmpbf.Node:
-				location = internal.Location{Latitude: v.Lat, Longitude: v.Lon}
-				map_node_nodes[NodeID(v.ID)] = []NodeID{}
-				map_node_LatLon[NodeID(v.ID)] = location
+				location = internal.Location{Latitude: float32(v.Lat), Longitude: float32(v.Lon)}
+				map_node_nodes[internal.NodeID(v.ID)] = []internal.NodeID{}
+				map_node_LatLon[internal.NodeID(v.ID)] = location
 				nc++
 			case *osmpbf.Way:
 				// Process Way v.
 				for _, i := range v.NodeIDs {
-					var actual_values = map_node_nodes[NodeID(i)]
-					for _, j := range v.NodeIDs {
-						if not_contains(actual_values, NodeID(j)) && i != j {
-							actual_values = append(actual_values, NodeID(j))
+					if check_for_valuable_information(v.Tags, internal.Useful_tags) {
+						var actual_values = map_node_nodes[internal.NodeID(i)]
+						for _, j := range v.NodeIDs {
+							if not_contains(actual_values, internal.NodeID(j)) && i != j {
+								actual_values = append(actual_values, internal.NodeID(j))
+							}
 						}
+						map_node_nodes[internal.NodeID(i)] = actual_values
 					}
-					map_node_nodes[NodeID(i)] = actual_values
 				}
 				wc++
 			case *osmpbf.Relation:
@@ -100,12 +82,13 @@ func loadData(osmFile string) (map[NodeID]([]NodeID), map[NodeID]internal.Locati
 				log.Fatalf("unknown type %T\n", v)
 			}
 		}
-	}
 
+	}
+	fmt.Println(nc, wc, rc)
 	return map_node_nodes, map_node_LatLon
 }
 
-func not_contains(s []NodeID, e NodeID) bool {
+func not_contains(s []internal.NodeID, e internal.NodeID) bool {
 	for _, a := range s {
 		if a == e {
 			return false
@@ -119,56 +102,75 @@ func insertNodes(collection *mongo.Collection, osmFile string) error {
 		Creates client to connect to datebase and inserts all nodes returned by ListPoints() function
 		to our database
 	*/
-	var dist float64
+	var dist float32
 	map_node_nodes, map_node_LatLon := loadData(osmFile)
 
 	// Inserting
 	for nodeId, neighbours := range map_node_nodes {
 		// Create an instance of a record
-		record := record{
+		record := internal.Record{
 			NodeId:     nodeId,
-			Neighbours: []neighbourData{},
+			Neighbours: []internal.NeighbourData{},
 		}
 		// Compute distances from the node to their neihgbours
 		for _, neighbourId := range neighbours {
 			dist = computeDistance(map_node_LatLon[nodeId], map_node_LatLon[neighbourId])
-			record.Neighbours = append(record.Neighbours, neighbourData{NeighbourId: neighbourId, Dist: dist})
+			record.Neighbours = append(record.Neighbours, internal.NeighbourData{NeighbourId: neighbourId, Dist: dist})
 		}
 
 		_, err := collection.InsertOne(context.TODO(), record)
 		// id := res.InsertedID
 
 		if err != nil {
-			fmt.Printf("Error occured when node inserting %v\n", err)
+			// fmt.Printf("Error occured when node inserting %v\n", err)
 			continue
 		}
-		fmt.Printf("properly inserted node %d\n", record.NodeId)
+		// fmt.Printf("properly inserted node %d\n", record.NodeId)
 	}
 	return nil
 }
 
-func computeDistance(startLatLon internal.Location, endLatLon internal.Location) float64 {
+func computeDistance(startLatLon internal.Location, endLatLon internal.Location) float32 {
 	// Function used for calculating
-	return math.Sqrt(math.Pow((startLatLon.Latitude-endLatLon.Latitude), 2) + math.Pow((startLatLon.Longitude-endLatLon.Longitude), 2))
+	return float32(math.Sqrt(math.Pow((float64(startLatLon.Latitude-endLatLon.Latitude)), 2) + math.Pow((float64(startLatLon.Longitude-endLatLon.Longitude)), 2)))
+}
+
+func contains(s string, e []string) bool {
+	for _, b := range e {
+		if s == b {
+			return true
+		}
+	}
+	return false
+}
+
+func check_for_valuable_information(tags_map map[string]string, tags_useful []string) bool {
+	for _, v := range tags_map {
+		if contains(v, tags_useful) {
+			return true
+		}
+	}
+	return false
 }
 
 func main() {
 	// Envoke insertion here
+	// loadData("greater-london-latest.osm.pbf")
 	viper.SetConfigFile(".env")
 	viper.ReadInConfig()
 
 	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
 	mongoURI := fmt.Sprintf(
 		"mongodb+srv://%s:%s@cluster1.yhqlj.mongodb.net/?retryWrites=true&w=majority",
-		viper.GetString(confOptMongoUser),
-		viper.GetString(confOptMongoPassword))
+		viper.GetString(internal.ConfOptMongoUser),
+		viper.GetString(internal.ConfOptMongoPassword))
 
 	clientOptions := options.Client().
 		ApplyURI(mongoURI).
 		SetServerAPIOptions(serverAPIOptions)
 
 	client, err := mongo.Connect(context.Background(), clientOptions)
-	collection := client.Database(viper.GetString(confOptMongoDatabase)).Collection("main")
+	collection := client.Database(viper.GetString(internal.ConfOptMongoDatabase)).Collection("main")
 
 	defer func() {
 		if err = client.Disconnect(context.TODO()); err != nil {

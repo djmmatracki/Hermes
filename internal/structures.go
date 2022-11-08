@@ -1,12 +1,34 @@
 package internal
 
+var Useful_tags = []string{"trunk", "primary"}
+
+const (
+	ConfOptMongoPassword = "MONGO_PASSWORD"
+	ConfOptMongoUser     = "MONGO_USER"
+	ConfOptMongoDatabase = "MONGO_DATABASE"
+)
+
+type NodeID int64
+
+type NeighbourData struct {
+	// Represents the data about each neighbour
+	NeighbourId NodeID  `bson:"neigbour_id"`
+	Dist        float32 `bson:"dist"`
+}
+
+type Record struct {
+	// Represents each record to insert
+	NodeId     NodeID          `bson:"node_id"`
+	Neighbours []NeighbourData `bson:"neigbours"`
+}
+
 // Graph
 /*
 	-
 */
 type Location struct {
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
+	Latitude  float32 `json:"latitude"`
+	Longitude float32 `json:"longitude"`
 }
 
 // Truck
