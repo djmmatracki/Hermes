@@ -36,6 +36,7 @@ func (i *HTTPInstanceAPI) Run() {
 	// Generate optimal
 	r.POST("/single-launch", i.singleLaunch)
 
+	i.log.Infof("Starting server at port %s", i.bind)
 	i.log.Fatal(fasthttp.ListenAndServe(i.bind, r.Handler))
 }
 
@@ -90,8 +91,15 @@ func (i *HTTPInstanceAPI) addTruck(ctx *fasthttp.RequestCtx) {
 }
 
 func (i *HTTPInstanceAPI) getTrucks(ctx *fasthttp.RequestCtx) {
-	i.api.getTrucks(ctx)
-	ctx.Response.SetBodyString("Get all truck...")
+	result, err := i.api.getTrucks(ctx)
+	if err != nil {
+		ctx.Response.SetBodyString("Cannot get trucks")
+		ctx.Response.SetStatusCode(400)
+		return
+	}
+	body, _ := json.Marshal(result)
+	ctx.Response.SetBody(body)
+	ctx.Response.SetStatusCode(200)
 }
 
 func (i *HTTPInstanceAPI) handleRoot(ctx *fasthttp.RequestCtx) {

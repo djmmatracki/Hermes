@@ -45,7 +45,7 @@ func createServerFromConfig(logger *logrus.Logger, bind string) *internal.HTTPIn
 
 	instanceAPI := internal.NewInstanceAPI(
 		logger.WithField("component", "api"),
-		client.Database(confOptMongoDatabase),
+		client.Database(viper.GetString(confOptMongoDatabase)),
 	)
 
 	return internal.NewHTTPInstanceAPI(bind, logger.WithField("component", "http"), instanceAPI)

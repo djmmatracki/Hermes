@@ -40,15 +40,15 @@ type SingleLaunchResponse struct {
 	-
 */
 type Location struct {
-	Latitude  float32 `json:"latitude"`
-	Longitude float32 `json:"longitude"`
+	Latitude  float32 `json:"latitude" bson:"latitude"`
+	Longitude float32 `json:"longitude" bson:"longitude"`
 }
 
 // Truck
 type Truck struct {
-	Id              int     `json:"id"`
-	FuelConsumption float32 `json:"fuel"`     // Spalanie
-	Capacity        int     `json:"capacity"` // Pojemnosc w tonach
+	Id              int     `json:"truck_id" bson:"truck_id"`
+	FuelConsumption float32 `json:"fuel" bson:"fuel"`         // Spalanie
+	Capacity        int     `json:"capacity" bson:"capacity"` // Pojemnosc w tonach
 	Location        Location
 }
 

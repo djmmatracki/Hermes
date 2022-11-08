@@ -13,7 +13,6 @@ import (
 
 	"github.com/qedus/osmpbf"
 	"github.com/spf13/viper"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -192,11 +191,11 @@ func main() {
 		}
 	}()
 
-	collection.DeleteMany(context.TODO(), bson.D{})
-	// for _, osmFile := range os.Args[1:] {
-	// 	if err := insertNodes(collection, osmFile); err != nil {
-	// 		fmt.Printf("error while inserting data: %v", err)
-	// 		return
-	// 	}
-	// }
+	// collection.DeleteMany(context.TODO(), bson.D{})
+	for _, osmFile := range os.Args[1:] {
+		if err := insertNodes(collection, osmFile); err != nil {
+			fmt.Printf("error while inserting data: %v", err)
+			return
+		}
+	}
 }
