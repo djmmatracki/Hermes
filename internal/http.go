@@ -87,10 +87,10 @@ func (i *HTTPInstanceAPI) aStar(ctx *fasthttp.RequestCtx) {
 func (i *HTTPInstanceAPI) addTruck(ctx *fasthttp.RequestCtx) {
 
 	// Get response from api
-	var body SingleLaunchRequest
+	var newTruck TruckRequest
 	collection := i.api.mongoDatabase.Collection("trucks")
 
-	err := json.Unmarshal(ctx.Request.Body(), &body)
+	err := json.Unmarshal(ctx.Request.Body(), &newTruck)
 
 	if err != nil {
 		i.log.Infof("Unable to unmarshal response: %v", err)
@@ -99,13 +99,13 @@ func (i *HTTPInstanceAPI) addTruck(ctx *fasthttp.RequestCtx) {
 	}
 
 	// Data validation
-	if err := validator.Validate(body); err != nil {
+	if err := validator.Validate(newTruck); err != nil {
 		ctx.Response.SetBodyString("Invelid input data")
 		ctx.Response.SetStatusCode(400)
 	} else {
 
 		// Execute insertion
-		_, err := collection.InsertOne(ctx, body)
+		_, err := collection.InsertOne(ctx, newTruck)
 		if err != nil {
 			ctx.Response.SetBodyString("Error while inserting truck")
 			ctx.Response.SetStatusCode(400)

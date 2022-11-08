@@ -22,12 +22,19 @@ type Record struct {
 	Neighbours []NeighbourData `bson:"neigbours"`
 }
 
+type TruckRequest struct {
+	TruckID         int      `json:"truck_id" validate:"min=0, max=1000000000000, nonnil"`
+	FuelConsumption float32  `json:"origin_lat" validate:"min=0, max=100, nonnil, nonzero"`
+	Capacity        float32  `json:"origin_lon" validate:"min=0, max=30, nonnil, nonzero"`
+	Location        Location `json:"destination_lat"`
+}
+
 type SingleLaunchRequest struct {
-	TruckID        int     `json:"truck_id" validate:"min=0, max=1000000000000, nonnil"`
-	OriginLat      float32 `json:"origin_lat" validate:"min=-90, max=90, nonnil"`
-	OriginLon      float32 `json:"origin_lon" validate:"min=0, max=180, nonnil"`
-	DestinationLat float32 `json:"destination_lat" validate:"min=-90, max=90, nonnil"`
-	DestinationLon float32 `json:"destination_lon" validate:"min=0, max=180, nonnil"`
+	TruckID        int     `json:"truck_id"`
+	OriginLat      float32 `json:"origin_lat"`
+	OriginLon      float32 `json:"origin_lon"`
+	DestinationLat float32 `json:"destination_lat"`
+	DestinationLon float32 `json:"destination_lon"`
 }
 
 type SingleLaunchResponse struct {
@@ -36,8 +43,8 @@ type SingleLaunchResponse struct {
 }
 
 type Location struct {
-	Latitude  float32 `json:"latitude" bson:"latitude"`
-	Longitude float32 `json:"longitude" bson:"longitude"`
+	Latitude  float32 `json:"latitude" bson:"latitude" validate:"min=-90, max=90, nonnil"`
+	Longitude float32 `json:"longitude" bson:"longitude" validate:"min=0, max=180, nonnil"`
 }
 
 // Truck
