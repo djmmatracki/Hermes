@@ -12,34 +12,12 @@ import (
 	"Hermes/internal"
 
 	"github.com/qedus/osmpbf"
+	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-<<<<<<< HEAD:scripts/insertion.go
 func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[internal.NodeID]internal.Location) {
-=======
-const (
-	confOptMongoPassword = "MONGO_PASSWORD"
-	confOptMongoUser     = "MONGO_USER"
-	confOptMongoDatabase = "MONGO_DATABASE"
-)
-
-type NodeID int64
-
-type NeighbourData struct {
-	// Represents the data about each neighbour
-	NeighbourId NodeID  `bson:"neigbour_id"`
-	Dist        float64 `bson:"dist"`
-}
-
-type Record struct {
-	// Represents each record to insert
-	NodeId     NodeID          `bson:"node_id"`
-	Neighbours []NeighbourData `bson:"neigbours"`
-}
-
-func loadData(osmFile string) (map[NodeID]([]NodeID), map[NodeID]internal.Location) {
->>>>>>> b4991dfb4428be6fda0c7cb4115e5f50700f9bca:insertion/insertion.go
 	/*
 		Opens osm.pbf file from folder, decodes it and make Adjacency list (graph) from it and associate Node_ID with connectiong Nodes
 
@@ -130,24 +108,14 @@ func insertNodes(collection *mongo.Collection, osmFile string) error {
 	// Inserting
 	for nodeId, neighbours := range map_node_nodes {
 		// Create an instance of a record
-<<<<<<< HEAD:scripts/insertion.go
 		record := internal.Record{
 			NodeId:     nodeId,
 			Neighbours: []internal.NeighbourData{},
-=======
-		record := Record{
-			NodeId:     nodeId,
-			Neighbours: []NeighbourData{},
->>>>>>> b4991dfb4428be6fda0c7cb4115e5f50700f9bca:insertion/insertion.go
 		}
 		// Compute distances from the node to their neihgbours
 		for _, neighbourId := range neighbours {
 			dist = computeDistance(map_node_LatLon[nodeId], map_node_LatLon[neighbourId])
-<<<<<<< HEAD:scripts/insertion.go
 			record.Neighbours = append(record.Neighbours, internal.NeighbourData{NeighbourId: neighbourId, Dist: dist})
-=======
-			record.Neighbours = append(record.Neighbours, NeighbourData{NeighbourId: neighbourId, Dist: dist})
->>>>>>> b4991dfb4428be6fda0c7cb4115e5f50700f9bca:insertion/insertion.go
 		}
 
 		_, err := collection.InsertOne(context.TODO(), record)
@@ -185,7 +153,6 @@ func check_for_valuable_information(tags_map map[string]string, tags_useful []st
 	return false
 }
 
-<<<<<<< HEAD:scripts/insertion.go
 func main() {
 	// loadData("greater-london-latest.osm.pbf")
 	// Envoke insertion here
@@ -198,42 +165,25 @@ func main() {
 		"mongodb+srv://%s:%s@cluster1.yhqlj.mongodb.net/?retryWrites=true&w=majority",
 		viper.GetString(internal.ConfOptMongoUser),
 		viper.GetString(internal.ConfOptMongoPassword))
-=======
-// func main() {
-// 	// Envoke insertion here
-// 	viper.SetConfigFile(".env")
-// 	viper.ReadInConfig()
 
-// 	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
-// 	mongoURI := fmt.Sprintf(
-// 		"mongodb+srv://%s:%s@cluster1.yhqlj.mongodb.net/?retryWrites=true&w=majority",
-// 		viper.GetString(confOptMongoUser),
-// 		viper.GetString(confOptMongoPassword))
->>>>>>> b4991dfb4428be6fda0c7cb4115e5f50700f9bca:insertion/insertion.go
+	clientOptions := options.Client().
+		ApplyURI(mongoURI).
+		SetServerAPIOptions(serverAPIOptions)
 
-// 	clientOptions := options.Client().
-// 		ApplyURI(mongoURI).
-// 		SetServerAPIOptions(serverAPIOptions)
-
-<<<<<<< HEAD:scripts/insertion.go
 	client, err := mongo.Connect(context.Background(), clientOptions)
 	collection := client.Database(viper.GetString(internal.ConfOptMongoDatabase)).Collection("main")
-=======
-// 	client, err := mongo.Connect(context.Background(), clientOptions)
-// 	collection := client.Database(viper.GetString(confOptMongoDatabase)).Collection("main")
->>>>>>> b4991dfb4428be6fda0c7cb4115e5f50700f9bca:insertion/insertion.go
 
-// 	defer func() {
-// 		if err = client.Disconnect(context.TODO()); err != nil {
-// 			panic(err)
-// 		}
-// 	}()
+	defer func() {
+		if err = client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
 
-// 	// collection.DeleteMany(context.TODO(), bson.D{})
-// 	for _, osmFile := range os.Args[1:] {
-// 		if err := insertNodes(collection, osmFile); err != nil {
-// 			fmt.Printf("error while inserting data: %v", err)
-// 			return
-// 		}
-// 	}
-// }
+	// collection.DeleteMany(context.TODO(), bson.D{})
+	for _, osmFile := range os.Args[1:] {
+		if err := insertNodes(collection, osmFile); err != nil {
+			fmt.Printf("error while inserting data: %v", err)
+			return
+		}
+	}
+}

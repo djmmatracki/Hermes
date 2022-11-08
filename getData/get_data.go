@@ -1,10 +1,9 @@
 package main
 
 import (
+	"Hermes/internal"
 	"context"
 	"fmt"
-
-	"Hermes/insertion"
 
 	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/bson"
@@ -41,7 +40,7 @@ func main() {
 			panic(err)
 		}
 	}()
-	var result insertion.Record
+	var result internal.Record
 
 	err = collection.FindOne(
 		context.TODO(),
