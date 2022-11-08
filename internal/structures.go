@@ -22,13 +22,6 @@ type Record struct {
 	Neighbours []NeighbourData `bson:"neigbours"`
 }
 
-type TruckRequest struct {
-	TruckID         int      `json:"truck_id" validate:"min=0, max=1000000000000, nonnil"`
-	FuelConsumption float32  `json:"origin_lat" validate:"min=0, max=100, nonnil, nonzero"`
-	Capacity        float32  `json:"origin_lon" validate:"min=0, max=30, nonnil, nonzero"`
-	Location        Location `json:"destination_lat"`
-}
-
 type SingleLaunchRequest struct {
 	TruckID        int     `json:"truck_id"`
 	OriginLat      float32 `json:"origin_lat"`
@@ -49,9 +42,9 @@ type Location struct {
 
 // Truck
 type Truck struct {
-	Id              int      `json:"truck_id" bson:"truck_id"`
-	FuelConsumption float32  `json:"fuel" bson:"fuel"`         // Spalanie
-	Capacity        int      `json:"capacity" bson:"capacity"` // Pojemnosc w tonach
+	Id              int      `json:"truck_id" bson:"truck_id" validate:"min=0, max=1000000000000, nonnil"`
+	FuelConsumption float32  `json:"fuel" bson:"fuel" validate:"min=0, max=100, nonnil, nonzero"`
+	Capacity        int      `json:"capacity" bson:"capacity" validate:"min=0, max=30, nonnil, nonzero"`
 	Location        Location `json:"location" bson:"location"`
 }
 

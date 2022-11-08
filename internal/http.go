@@ -87,8 +87,8 @@ func (i *HTTPInstanceAPI) aStar(ctx *fasthttp.RequestCtx) {
 func (i *HTTPInstanceAPI) addTruck(ctx *fasthttp.RequestCtx) {
 
 	// Get response from api
-	var newTruck TruckRequest
-	collection := i.api.mongoDatabase.Collection("trucks")
+	var newTruck Truck
+	collection := i.api.mongoDatabase.Collection("truck")
 
 	err := json.Unmarshal(ctx.Request.Body(), &newTruck)
 
