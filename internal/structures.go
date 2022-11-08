@@ -35,10 +35,6 @@ type SingleLaunchResponse struct {
 	TripDistance     float32 `json:"trip_distance"`
 }
 
-// Graph
-/*
-	-
-*/
 type Location struct {
 	Latitude  float32 `json:"latitude" bson:"latitude"`
 	Longitude float32 `json:"longitude" bson:"longitude"`
