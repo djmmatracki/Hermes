@@ -46,10 +46,10 @@ type Location struct {
 
 // Truck
 type Truck struct {
-	Id              int     `json:"truck_id" bson:"truck_id"`
-	FuelConsumption float32 `json:"fuel" bson:"fuel"`         // Spalanie
-	Capacity        int     `json:"capacity" bson:"capacity"` // Pojemnosc w tonach
-	Location        Location
+	Id              int      `json:"truck_id" bson:"truck_id"`
+	FuelConsumption float32  `json:"fuel" bson:"fuel"`         // Spalanie
+	Capacity        int      `json:"capacity" bson:"capacity"` // Pojemnosc w tonach
+	Location        Location `json:"location" bson:"location"`
 }
 
 // Fleet
