@@ -1,4 +1,4 @@
-package insertion
+package main
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 
 	"github.com/qedus/osmpbf"
 	"github.com/spf13/viper"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -50,7 +51,7 @@ func loadData(osmFile string) (map[internal.NodeID]([]internal.NodeID), map[inte
 	var nc, wc, rc uint64
 	var location internal.Location
 
-	for i := 0; i < 7610115; i++ {
+	for {
 		if v, err := d.Decode(); err == io.EOF {
 			break
 		} else if err != nil {
@@ -167,9 +168,8 @@ func check_for_valuable_information(tags_map map[string]string, tags_useful []st
 }
 
 func main() {
-	// loadData("greater-london-latest.osm.pbf")
 	// Envoke insertion here
-	loadData("greater-london-latest.osm.pbf")
+	// loadData("greater-london-latest.osm.pbf")
 	viper.SetConfigFile(".env")
 	viper.ReadInConfig()
 
@@ -192,11 +192,11 @@ func main() {
 		}
 	}()
 
-	// collection.DeleteMany(context.TODO(), bson.D{})
-	for _, osmFile := range os.Args[1:] {
-		if err := insertNodes(collection, osmFile); err != nil {
-			fmt.Printf("error while inserting data: %v", err)
-			return
-		}
-	}
+	collection.DeleteMany(context.TODO(), bson.D{})
+	// for _, osmFile := range os.Args[1:] {
+	// 	if err := insertNodes(collection, osmFile); err != nil {
+	// 		fmt.Printf("error while inserting data: %v", err)
+	// 		return
+	// 	}
+	// }
 }

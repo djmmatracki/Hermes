@@ -1,6 +1,6 @@
 package internal
 
-var Useful_tags = []string{"trunk", "primary"}
+var Useful_tags = []string{"trunk", "primary", "motorway", "secondary"}
 
 const (
 	ConfOptMongoPassword = "MONGO_PASSWORD"
@@ -20,6 +20,19 @@ type Record struct {
 	// Represents each record to insert
 	NodeId     NodeID          `bson:"node_id"`
 	Neighbours []NeighbourData `bson:"neigbours"`
+}
+
+type SingleLaunchRequest struct {
+	TruckID        int     `json:"truck_id"`
+	OriginLat      float32 `json:"origin_lat"`
+	OriginLon      float32 `json:"origin_lon"`
+	DestinationLat float32 `json:"destination_lat"`
+	DestinationLon float32 `json:"destination_lon"`
+}
+
+type SingleLaunchResponse struct {
+	DistanceToOrigin float32 `json:"distance_to_origin"`
+	TripDistance     float32 `json:"trip_distance"`
 }
 
 // Graph

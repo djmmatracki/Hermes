@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"encoding/json"
+
 	"github.com/fasthttp/router"
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
@@ -32,16 +34,49 @@ func (i *HTTPInstanceAPI) Run() {
 	r.GET("/truck", i.getTrucks)
 
 	// Generate optimal
-	r.POST("/launch", i.launch)
+	r.POST("/single-launch", i.singleLaunch)
 
 	i.log.Fatal(fasthttp.ListenAndServe(i.bind, r.Handler))
 }
 
-func (i *HTTPInstanceAPI) launch(ctx *fasthttp.RequestCtx) {
-	ctx.Response.SetBodyString("Genereting optimal paths for given fleet...")
-	// Receive list of orders
-	// Loop each truck and each order
-	// For each pair (truck - order) calculate priority
+func (i *HTTPInstanceAPI) singleLaunch(ctx *fasthttp.RequestCtx) {
+	var singleLaunchRequst SingleLaunchRequest
+
+	body := ctx.Request.Body()
+	err := json.Unmarshal(body, &singleLaunchRequst)
+
+	if err != nil {
+		i.log.Infof("Unable to unmarshal response: %v", err)
+		ctx.Response.SetBodyString("Invalid request sent")
+		ctx.Response.SetStatusCode(400)
+		return
+	}
+	response, err := i.api.singleTruckLaunch(
+		singleLaunchRequst.TruckID,
+		Location{
+			Latitude:  singleLaunchRequst.OriginLat,
+			Longitude: singleLaunchRequst.OriginLon,
+		},
+		Location{
+			Latitude:  singleLaunchRequst.DestinationLat,
+			Longitude: singleLaunchRequst.DestinationLon,
+		},
+	)
+	if err != nil {
+		i.log.Infof("Unable to unmarshal response: %v", err)
+		ctx.Response.SetBodyString("Invalid request sent")
+		ctx.Response.SetStatusCode(400)
+		return
+	}
+	jsonResponse, err := json.Marshal(response)
+
+	if err != nil {
+		i.log.Infof("Unable to unmarshal response: %v", err)
+		ctx.Response.SetBodyString("Invalid request sent")
+		ctx.Response.SetStatusCode(500)
+	}
+	ctx.Response.SetBody(jsonResponse)
+	ctx.Response.SetStatusCode(200)
 }
 func (i *HTTPInstanceAPI) aStar(ctx *fasthttp.RequestCtx) {
 	ctx.Response.SetBodyString("Compiling a-star...")
