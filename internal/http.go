@@ -90,29 +90,34 @@ func (i *HTTPInstanceAPI) addTruck(ctx *fasthttp.RequestCtx) {
 	var newTruck Truck
 	collection := i.api.mongoDatabase.Collection("truck")
 
-	err := json.Unmarshal(ctx.Request.Body(), &newTruck)
+	body := ctx.Request.Body()
+	err := json.Unmarshal(body, &newTruck)
 
 	if err != nil {
 		i.log.Infof("Unable to unmarshal response: %v", err)
 		ctx.Response.SetBodyString("Invalid request sent")
 		ctx.Response.SetStatusCode(400)
+		return
 	}
 
 	// Data validation
-	if err := validator.Validate(newTruck); err != nil {
+	err2 := validator.Validate(newTruck)
+	if err2 != nil {
 		ctx.Response.SetBodyString("Invelid input data")
 		ctx.Response.SetStatusCode(400)
-	} else {
+		return
+	}
 
-		// Execute insertion
-		_, err := collection.InsertOne(ctx, newTruck)
-		if err != nil {
-			ctx.Response.SetBodyString("Error while inserting truck")
-			ctx.Response.SetStatusCode(400)
-		} else {
-			ctx.Response.SetBodyString("Inserted new truck...")
-			ctx.Response.SetStatusCode(200)
-		}
+	// Execute insertion
+	_, err3 := collection.InsertOne(ctx, newTruck)
+	if err3 != nil {
+		ctx.Response.SetBodyString("Error while inserting truck")
+		ctx.Response.SetStatusCode(400)
+		return
+	} else {
+		ctx.Response.SetBodyString("Inserted new truck...")
+		ctx.Response.SetStatusCode(200)
+		return
 	}
 }
 
