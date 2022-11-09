@@ -19,6 +19,7 @@ type NeighbourData struct {
 type Record struct {
 	// Represents each record to insert
 	NodeId     NodeID          `bson:"node_id"`
+	Location   Location        `bson:"location"`
 	Neighbours []NeighbourData `bson:"neigbours"`
 }
 

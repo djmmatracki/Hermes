@@ -124,6 +124,7 @@ func insertNodes(collection *mongo.Collection, osmFile string) error {
 		record := internal.Record{
 			NodeId:     nodeId,
 			Neighbours: []internal.NeighbourData{},
+			Location:   map_node_LatLon[nodeId],
 		}
 		// Compute distances from the node to their neihgbours
 		for _, neighbourId := range neighbours {
