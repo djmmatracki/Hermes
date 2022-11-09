@@ -38,7 +38,7 @@ func (a *InstanceAPI) getTrucks(ctx context.Context) ([]Truck, error) {
 	return results, nil
 }
 
-func (a *InstanceAPI) singleTruckLaunch(truckID int, origin, destination Location) (*SingleLaunchResponse, error) {
+func (a *InstanceAPI) singleTruckLaunch(truckID int, origin, trip_destiantion, destination Location) (*SingleLaunchResponse, error) {
 	// var distanceToOrigin, distanceTo
 	var truck Truck
 	collection := a.mongoDatabase.Collection("truck")
@@ -46,12 +46,13 @@ func (a *InstanceAPI) singleTruckLaunch(truckID int, origin, destination Locatio
 		context.TODO(),
 		bson.D{{"truck_id", truckID}},
 	)
+
 	err := result.Decode(&truck)
 	if err != nil {
 		return nil, err
 	}
-	// Astar(collection, truck_origin, trip_origin Location) -> dystans
-	// Astar(collection, trip_origin, trip_destination Location) -> dystans
+	internal.A_star(collection, truck_origin, trip_origin Location) -> dystans
+	internal.A_star(collection, trip_origin, trip_destination Location) -> dystans
 	// origin, destination
 	return nil, nil
 }

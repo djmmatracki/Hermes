@@ -1,7 +1,11 @@
 package internal
 
 import (
+	"context"
 	"math"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func contains(s []int64, e int64) bool {
@@ -38,7 +42,7 @@ func heuritic_a_star(pos1 []float64, pos2 []float64) float64 {
 }
 
 // CHANGE THE INPUT VALUES
-func A_star(start int64, stop int64, adjacency_list map[int64]([]int64), nodes_position map[int64]([]float64)) []int64 {
+func A_star(call *mongo.Collection, start Location, stop Location) (float32, error) {
 	/*
 		Classic A_star algorithm, compute the dystans between two points, knowing there's position [Lat, Lon]
 
@@ -49,27 +53,14 @@ func A_star(start int64, stop int64, adjacency_list map[int64]([]int64), nodes_p
 			- nodes_position map[int64]([]float64) - mapping the node_id to real position in format; Node_id: [Latitute, Longitute]
 
 		Returns:
-			- map[int64]int64
-	*/
-
-	/*
-		Opcja 1:
-			- Pobieranie całej caly danych na raz przy działaniu programu:
-				- start
-				- stop
-
-		Opcje 2:
-		Pobieranie danych w czasie działania programu
-			start, stop zostaje
-			fScore dla node_id -> neigbour_id -> dist (cale heuritic_a_star tak)
-			adjecency_list -> pobieranie w postaci neigbours (z bazy) odwolanie do elementów neigbour_id
-
-
+			- float32,err - distance, error
 	*/
 
 	// Find Nodes_ID knowing there's position
-	start_id := start
-	stop_id := stop
+	start_pos := []float32{start.Latitude, start.Longitude}
+	stop_pos := []float32{stop.Latitude, stop.Longitude}
+
+	// start_id = find_nearest_node_id(start_pos)
 
 	// Create opensets that will be our stack where we will put our neighbour nodes
 	openSet := []int64{start_id}
@@ -81,40 +72,53 @@ func A_star(start int64, stop int64, adjacency_list map[int64]([]int64), nodes_p
 	// fScore is current best guess as how we can get to finish
 	fScore := make(map[int64]float64)
 
+	var adjacency_list_node Record
+	result := call.FindOne(
+		context.TODO(),
+		bson.D{{"node_id", start_id}},
+	)
+	err := result.Decode(&adjacency_list_node)
+	if err != nil {
+		return 0, err
+	}
+
+	// []NeighbourData
+	adjacency_list := adjacency_list_node.Neighbours
+
 	// Makes all cheapest costs to infinity and heuristics update
-	for k := range adjacency_list {
-		gScore[k] = math.MaxFloat64
-		fScore[k] = heuritic_a_star(nodes_position[k], nodes_position[stop_id])
+	for node_id, _ := range adjacency_list {
+		gScore[int64(node_id)] = math.MaxFloat64
+		fScore[int64(node_id)] = 1000 // FROM BASE heuristic!!!!!
 	}
 
 	// Update the cost to to first location to 0 (we are here) and fScore to distance now
 	gScore[start_id] = 0
-	fScore[start_id] = heuritic_a_star(nodes_position[start_id], nodes_position[stop_id]) // FROM BASE
+	fScore[start_id] = 100 // // FROM BASE heuristic!!!!!
 
 	// While we can visit neighbour node
 	for len(openSet) > 0 {
 		// From fScore we take node with the lowest value of: road to node + distance from node to destination
 		current := get_lowest_node(fScore, openSet)
 		if current == stop_id {
-			return reconstruct_path(cameFrom, current, stop_id, start_id)
+			return float32(gScore[current]), err
 		}
 
 		// Delete actual visiting node
 		openSet = find_index_remove(openSet, current)
-		for _, v := range adjacency_list[current] {
-			var tentative_gScore float64 = gScore[current] + heuritic_a_star(nodes_position[current], nodes_position[v]) // FROM BASE
-			if tentative_gScore < gScore[v] {
-				cameFrom[v] = current
-				gScore[v] = tentative_gScore
-				fScore[v] = tentative_gScore + heuritic_a_star(nodes_position[v], nodes_position[stop_id])
-				if not_in_slice(v, openSet) {
-					openSet = append(openSet, v)
+		for node_id, _ := range adjacency_list {
+			var tentative_gScore float64 = gScore[current] + 1 // FROM BASE heuristic!!!!!
+			if tentative_gScore < gScore[int64(node_id)] {
+				cameFrom[int64(node_id)] = current
+				gScore[int64(node_id)] = tentative_gScore
+				fScore[int64(node_id)] = tentative_gScore + 1 // FROM BASE heuristic!!!!!
+				if not_in_slice(int64(node_id), openSet) {
+					openSet = append(openSet, int64(node_id))
 				}
 			}
 		}
 
 	}
-	return []int64{-1}
+	return float32(1), err
 }
 
 func not_in_slice(value int64, slice []int64) bool {
@@ -150,3 +154,5 @@ func get_lowest_node(fs map[int64]float64, available_nodes []int64) int64 {
 	}
 	return pos
 }
+
+// find_nearest_node_id <- zrobić
