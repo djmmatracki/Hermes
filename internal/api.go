@@ -51,8 +51,8 @@ func (a *InstanceAPI) singleTruckLaunch(truckID int, origin, trip_destiantion, d
 	if err != nil {
 		return nil, err
 	}
-	internal.A_star(collection, truck_origin, trip_origin Location) -> dystans
-	internal.A_star(collection, trip_origin, trip_destination Location) -> dystans
+	internal.A_star(collection, truck_origin, trip_origin Location)
+	internal.A_star(collection, trip_origin, trip_destination Location)
 	// origin, destination
 	return nil, nil
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/fasthttp/router"
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
+	"gopkg.in/validator.v2"
 )
 
 type HTTPInstanceAPI struct {
@@ -84,10 +85,40 @@ func (i *HTTPInstanceAPI) aStar(ctx *fasthttp.RequestCtx) {
 }
 
 func (i *HTTPInstanceAPI) addTruck(ctx *fasthttp.RequestCtx) {
+
 	// Get response from api
-	// Parse response
+	var newTruck Truck
+	collection := i.api.mongoDatabase.Collection("truck")
+
+	body := ctx.Request.Body()
+	err := json.Unmarshal(body, &newTruck)
+
+	if err != nil {
+		i.log.Infof("Unable to unmarshal response: %v", err)
+		ctx.Response.SetBodyString("Invalid request sent")
+		ctx.Response.SetStatusCode(400)
+		return
+	}
+
+	// Data validation
+	err2 := validator.Validate(newTruck)
+	if err2 != nil {
+		ctx.Response.SetBodyString("Invelid input data")
+		ctx.Response.SetStatusCode(400)
+		return
+	}
+
 	// Execute insertion
-	ctx.Response.SetBodyString("Inserted new truck...")
+	_, err3 := collection.InsertOne(ctx, newTruck)
+	if err3 != nil {
+		ctx.Response.SetBodyString("Error while inserting truck")
+		ctx.Response.SetStatusCode(400)
+		return
+	} else {
+		ctx.Response.SetBodyString("Inserted new truck...")
+		ctx.Response.SetStatusCode(200)
+		return
+	}
 }
 
 func (i *HTTPInstanceAPI) getTrucks(ctx *fasthttp.RequestCtx) {
