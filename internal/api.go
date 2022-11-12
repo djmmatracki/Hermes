@@ -44,15 +44,21 @@ func (a *InstanceAPI) singleTruckLaunch(truckID int, origin, trip_destiantion, d
 	collection := a.mongoDatabase.Collection("truck")
 	result := collection.FindOne(
 		context.TODO(),
-		bson.D{{"truck_id", truckID}},
+		bson.D{{Key: "truck_id", Value: truckID}},
 	)
 
 	err := result.Decode(&truck)
 	if err != nil {
 		return nil, err
 	}
-	internal.A_star(collection, truck_origin, trip_origin Location)
-	internal.A_star(collection, trip_origin, trip_destination Location)
+
+	collection_node := a.mongoDatabase.Collection("main")
+
+	origin_to_dest, _ := A_star(collection_node, origin, trip_destiantion)
+	dest_to_finish, _ := A_star(collection_node, trip_destiantion, destination)
 	// origin, destination
-	return nil, nil
+	return &SingleLaunchResponse{
+		TripDistance:     origin_to_dest + dest_to_finish,
+		DistanceToOrigin: origin_to_dest,
+	}, nil
 }

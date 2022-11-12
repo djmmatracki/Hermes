@@ -63,6 +63,10 @@ func (i *HTTPInstanceAPI) singleLaunch(ctx *fasthttp.RequestCtx) {
 			Latitude:  singleLaunchRequst.DestinationLat,
 			Longitude: singleLaunchRequst.DestinationLon,
 		},
+		Location{
+			Latitude:  singleLaunchRequst.DestinationLat,
+			Longitude: singleLaunchRequst.DestinationLon,
+		},
 	)
 	if err != nil {
 		i.log.Infof("Unable to unmarshal response: %v", err)

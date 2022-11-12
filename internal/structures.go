@@ -1,6 +1,11 @@
 package internal
 
+import (
+	"time"
+)
+
 var Useful_tags = []string{"trunk", "primary", "motorway", "secondary"}
+var Max_speed_truck float32 = 75 // km/h
 
 const (
 	ConfOptMongoPassword = "MONGO_PASSWORD"
@@ -56,4 +61,10 @@ type Fleet struct {
 
 // Order
 // TODO Implement order struct here
-type Order struct{}
+type Order struct {
+	Location_order      Location  `json:"location_order" bson:"location_order"`
+	Location_to_deliver Location  `json:"location_to_deliver" bson:"location_to_deliver"`
+	Time_delivery       time.Time `json:"time_delivery" bson:"time_delivery"`
+	Value               float32   `json:"value" bson:"value"`
+	Capacity            int       `json:"capacity" bson:"capacity"`
+}
