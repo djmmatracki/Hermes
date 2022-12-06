@@ -38,6 +38,22 @@ func (a *InstanceAPI) getTrucks(ctx context.Context) ([]Truck, error) {
 	return results, nil
 }
 
+func (a *InstanceAPI) getOrders(ctx context.Context) ([]Order, error) {
+	var results []Order
+	collection := a.mongoDatabase.Collection("order")
+	cur, err := collection.Find(ctx, bson.D{})
+	if err != nil {
+		a.log.Fatal(err)
+		return nil, errors.New("")
+	}
+	if err = cur.All(context.TODO(), &results); err != nil {
+		a.log.Fatal(err)
+		return nil, errors.New("")
+	}
+
+	return results, nil
+}
+
 func (a *InstanceAPI) singleTruckLaunch(truckID int, origin, trip_destiantion, destination Location) (*SingleLaunchResponse, error) {
 	// var distanceToOrigin, distanceTo
 	var truck Truck

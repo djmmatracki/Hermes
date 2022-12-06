@@ -64,7 +64,7 @@ type Fleet struct {
 type Order struct {
 	Location_order      Location  `json:"location_order" bson:"location_order"`
 	Location_to_deliver Location  `json:"location_to_deliver" bson:"location_to_deliver"`
-	Time_delivery       time.Time `json:"time_delivery" bson:"time_delivery"`
-	Value               float32   `json:"value" bson:"value"`
-	Capacity            int       `json:"capacity" bson:"capacity"`
+	Time_delivery       time.Time `json:"time_delivery" bson:"time_delivery" validate:"nonnil"`
+	Value               float32   `json:"value" bson:"value" validate:"min=0, nonnil, nonzero"`
+	Capacity            int       `json:"capacity" bson:"capacity" validate:"min=0, nonnil, nonzero"`
 }
