@@ -43,16 +43,16 @@ func (i *HTTPInstanceAPI) Run() {
 
 func (i *HTTPInstanceAPI) singleLaunch(ctx *fasthttp.RequestCtx) {
 	var singleLaunchRequst SingleLaunchRequest
-
 	body := ctx.Request.Body()
-	err := json.Unmarshal(body, &singleLaunchRequst)
 
+	err := json.Unmarshal(body, &singleLaunchRequst)
 	if err != nil {
 		i.log.Infof("Unable to unmarshal response: %v", err)
 		ctx.Response.SetBodyString("Invalid request sent")
 		ctx.Response.SetStatusCode(400)
 		return
 	}
+
 	response, err := i.api.singleTruckLaunch(
 		singleLaunchRequst.TruckID,
 		Location{
@@ -74,8 +74,8 @@ func (i *HTTPInstanceAPI) singleLaunch(ctx *fasthttp.RequestCtx) {
 		ctx.Response.SetStatusCode(400)
 		return
 	}
-	jsonResponse, err := json.Marshal(response)
 
+	jsonResponse, err := json.Marshal(response)
 	if err != nil {
 		i.log.Infof("Unable to unmarshal response: %v", err)
 		ctx.Response.SetBodyString("Invalid request sent")
