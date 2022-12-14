@@ -108,7 +108,7 @@ func (a *InstanceAPI) simulatedAnneling(orders []Order, Nmax int, TStart, TFinal
 	}
 
 	bestAssignment := assignment
-	bestF, err := a.assignmentCost(orders, bestAssignment)
+	bestF, err := a.costAssignment(orders, bestAssignment)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (a *InstanceAPI) simulatedAnneling(orders []Order, Nmax int, TStart, TFinal
 		pos2 := TruckID(trucks[rand.Intn(numberOfTrucks)].Id)
 		assignment[pos1], assignment[pos2] = assignment[pos2], assignment[pos1]
 
-		fS, err := a.assignmentCost(orders, assignment)
+		fS, err := a.costAssignment(orders, assignment)
 		if err != nil {
 			return nil, err
 		}
@@ -146,7 +146,7 @@ func (a *InstanceAPI) simulatedAnneling(orders []Order, Nmax int, TStart, TFinal
 	}, nil
 }
 
-func (a *InstanceAPI) assignmentCost(orders []Order, assingment TrucksAssignment) (float32, error) {
+func (a *InstanceAPI) costAssignment(orders []Order, assingment TrucksAssignment) (float32, error) {
 	var sum float32
 	for truckID, order := range assingment {
 		truck, err := a.getTruck(context.Background(), truckID)

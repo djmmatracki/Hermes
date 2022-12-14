@@ -44,9 +44,30 @@ func (i *HTTPInstanceAPI) Run() {
 
 	r.POST("/single-launch", i.singleLaunch)
 	r.POST("/match-orders", i.matchOrders)
+	r.POST("/a-star", i.Astar)
 
 	i.log.Infof("Starting server at port %s", i.bind)
 	i.log.Fatal(fasthttp.ListenAndServe(i.bind, r.Handler))
+}
+
+func (i *HTTPInstanceAPI) Astar(ctx *fasthttp.RequestCtx) {
+	mainCollection := i.api.mongoDatabase.Collection("main")
+	dist, err := Astar(
+		mainCollection,
+		Location{
+			Latitude:  0.2,
+			Longitude: 0.2,
+		},
+		Location{
+			Latitude:  0.2,
+			Longitude: 0.2,
+		},
+	)
+	if err != nil {
+		return
+	}
+
+	i.log.Infof("distance: %f", dist)
 }
 
 func (i *HTTPInstanceAPI) singleLaunch(ctx *fasthttp.RequestCtx) {

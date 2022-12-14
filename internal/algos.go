@@ -12,11 +12,20 @@ func computeDistance(startLatLon Location, endLatLon Location) float32 {
 	return float32(math.Sqrt(math.Pow((float64(startLatLon.Latitude-endLatLon.Latitude)), 2) + math.Pow((float64(startLatLon.Longitude-endLatLon.Longitude)), 2)))
 }
 
-func Astar(call *mongo.Collection, start Location, stop Location) (float32, error) {
-	startID, _ := find_nearest_node_id(call, start)
-	stopID, _ := find_nearest_node_id(call, stop)
-	openSet := []NodeID{startID}
+func Astar(collection *mongo.Collection, start Location, stop Location) (float32, error) {
+	startNode, err := findNearestNode(collection, start)
+	if err != nil {
+		return 0, err
+	}
 
+	stopNode, err := findNearestNode(collection, stop)
+	if err != nil {
+		return 0, err
+	}
+	startID := startNode.NodeId
+	stopID := stopNode.NodeId
+
+	openSet := map[NodeID]string{startID: ""}
 	cameFrom := make(map[NodeID]NodeID)
 
 	// gScore is cost of the cheapest path from from start to currently known
@@ -24,18 +33,8 @@ func Astar(call *mongo.Collection, start Location, stop Location) (float32, erro
 	// fScore is current best guess as how we can get to finish
 	fScore := make(map[NodeID]float32)
 
-	var adjacency_list_node Record
-	result := call.FindOne(
-		context.TODO(),
-		bson.D{{Key: "node_id", Value: startID}},
-	)
-	err := result.Decode(&adjacency_list_node)
-	if err != nil {
-		return 0, err
-	}
-
-	adjacency_list := adjacency_list_node.Neighbours
-	for _, neigh_data := range adjacency_list {
+	startNodeNeighbours := startNode.Neighbours
+	for _, neigh_data := range startNodeNeighbours {
 		gScore[neigh_data.NeighbourId] = math.MaxFloat32
 		fScore[neigh_data.NeighbourId] = math.MaxFloat32
 	}
@@ -45,12 +44,12 @@ func Astar(call *mongo.Collection, start Location, stop Location) (float32, erro
 
 	for len(openSet) > 0 {
 		var adjacency_list_node Record
-		current := get_lowest_node(fScore, openSet)
+		current := getLowestNode(fScore, openSet)
 		if current == stopID {
 			return gScore[current], err
 		}
 
-		result := call.FindOne(
+		result := collection.FindOne(
 			context.TODO(),
 			bson.D{{Key: "node_id", Value: current}},
 		)
@@ -59,15 +58,15 @@ func Astar(call *mongo.Collection, start Location, stop Location) (float32, erro
 			return 0, err
 		}
 
-		openSet = find_index_remove(openSet, current)
+		delete(openSet, current)
 		for _, neigh := range adjacency_list_node.Neighbours {
 			var tentative_gScore float32 = gScore[current] + neigh.Dist
 			if tentative_gScore < gScore[neigh.NeighbourId] {
 				cameFrom[neigh.NeighbourId] = current
 				gScore[neigh.NeighbourId] = tentative_gScore
 				fScore[neigh.NeighbourId] = tentative_gScore + neigh.Dist
-				if not_in_slice(neigh.NeighbourId, openSet) {
-					openSet = append(openSet, neigh.NeighbourId)
+				if _, ok := openSet[neigh.NeighbourId]; !ok {
+					openSet[neigh.NeighbourId] = ""
 				}
 			}
 		}
@@ -98,7 +97,7 @@ func find_index_remove(slice []NodeID, curr NodeID) []NodeID {
 	return append(list_out1, list_out2...)
 }
 
-func get_lowest_node(fs map[NodeID]float32, available_nodes []NodeID) NodeID {
+func getLowestNode(fs map[NodeID]float32, available_nodes map[NodeID]string) NodeID {
 	var min_value float32 = math.MaxFloat32
 	var pos NodeID = -1
 	for _, v := range available_nodes {
@@ -110,14 +109,32 @@ func get_lowest_node(fs map[NodeID]float32, available_nodes []NodeID) NodeID {
 	return pos
 }
 
-func find_nearest_node_id(call *mongo.Collection, pos Location) (NodeID, error) {
+func findNearestNode(call *mongo.Collection, pos Location) (*Record, error) {
 	var location Record
-	result, _ := call.Find(context.TODO(), bson.D{{Key: "location", Value: bson.D{{Key: "latitude", Value: bson.D{{Key: "$gt", Value: pos.Latitude - 0.01}, {Key: "$lt", Value: pos.Latitude + 0.01}}}, {Key: "longitude", Value: bson.D{{Key: "$gt", Value: pos.Longitude - 0.01}, {Key: "$lt", Value: pos.Longitude + 0.01}}}}}})
-	err := result.Decode(&location)
-	if err != nil {
-		return -1, err
+	result, _ := call.Find(context.TODO(),
+		bson.D{{
+			Key: "location",
+			Value: bson.D{{
+				Key: "latitude",
+				Value: bson.D{{
+					Key:   "$gt",
+					Value: pos.Latitude - 0.01,
+				}, {
+					Key:   "$lt",
+					Value: pos.Latitude + 0.01,
+				}}}, {
+				Key: "longitude",
+				Value: bson.D{{
+					Key:   "$gt",
+					Value: pos.Longitude - 0.01,
+				}, {
+					Key:   "$lt",
+					Value: pos.Longitude + 0.01,
+				}}}}}})
+	if err := result.Decode(&location); err != nil {
+		return nil, err
 	}
-	return location.NodeId, nil
+	return &location, nil
 }
 
 // func choose_best_truck(fleet Fleet, order Order, call *mongo.Collection) Truck {
