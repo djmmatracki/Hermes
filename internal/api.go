@@ -35,10 +35,21 @@ func (a *InstanceAPI) getTrucks(ctx context.Context) ([]Truck, error) {
 	}
 	if err = cur.All(context.TODO(), &results); err != nil {
 		a.log.Fatal(err)
-		return nil, errors.New("Error while")
+		return nil, errors.New("error while")
 	}
 
 	return results, nil
+}
+
+func (a *InstanceAPI) getTruck(ctx context.Context, truckID TruckID) (*Truck, error) {
+	var truck Truck
+	collection := a.mongoDatabase.Collection("truck")
+	result := collection.FindOne(ctx, bson.D{{"truck_id", truckID}})
+
+	if err := result.Decode(&truck); err != nil {
+		return nil, err
+	}
+	return &truck, nil
 }
 
 func (a *InstanceAPI) singleTruckLaunch(truckID int, currentLocation, tripOrigin, tripDestination Location) (*SingleLaunchResponse, error) {
@@ -72,41 +83,56 @@ func (a *InstanceAPI) singleTruckLaunch(truckID int, currentLocation, tripOrigin
 	}, nil
 }
 
-func (i *InstanceAPI) simulatedAnneling(trucks []Truck, orders []Order, Nmax int, TStart, TFinal, cooling, k float64) (*TrucksAssignmentSolution, error) {
-	assignment := make(TrucksAssignment, 0)
+func (a *InstanceAPI) simulatedAnneling(orders []Order, Nmax int, TStart, TFinal, cooling, k float32) (*TrucksAssignmentSolution, error) {
+	var orderRevenue float32
+	assignment := make(TrucksAssignment)
+
+	a.log.Info("getting trucks from mongo db database")
+	trucks, err := a.getTrucks(context.Background())
+	if err != nil {
+		return nil, err
+	}
 
 	if len(trucks) != len(orders) {
 		return nil, fmt.Errorf("number of trucks and orders should be the same")
 	}
 	numberOfTrucks := len(trucks)
 
+	a.log.Infof("creating initial assignment for %d", numberOfTrucks)
 	for index, truck := range trucks {
-		assignment[TruckID(truck.Id)] = OrderID(orders[index].Id)
+		assignment[TruckID(truck.Id)] = orders[index]
 	}
 
-	orderRevenue := 0
-	for _, order in range orders{
-		orderRevenue += order.value
+	for _, order := range orders {
+		orderRevenue += order.Value
 	}
 
 	bestAssignment := assignment
-	bestF := i.assignmentCost(bestAssignment)
+	bestF, err := a.assignmentCost(orders, bestAssignment)
+	if err != nil {
+		return nil, err
+	}
+
 	Temp := TStart
 	n := 0
 
 	for Temp > TFinal && n < Nmax {
-		pos1 := TruckID(rand.Intn(numberOfTrucks))
-		pos2 := TruckID(rand.Intn(numberOfTrucks))
-
+		pos1 := TruckID(trucks[rand.Intn(numberOfTrucks)].Id)
+		pos2 := TruckID(trucks[rand.Intn(numberOfTrucks)].Id)
 		assignment[pos1], assignment[pos2] = assignment[pos2], assignment[pos1]
-		fS := i.assignmentCost(assignment)
+
+		fS, err := a.assignmentCost(orders, assignment)
+		if err != nil {
+			return nil, err
+		}
+
 		if fS < bestF {
 			bestAssignment = assignment
 			bestF = fS
 		} else {
 			delta := fS - bestF
-			r := rand.Float64()
-			if r < math.Exp(-delta/k*Temp) {
+			r := rand.Float32()
+			if r < float32(math.Exp(float64(-delta/k*Temp))) {
 				bestAssignment = assignment
 				bestF = fS
 			}
@@ -114,23 +140,20 @@ func (i *InstanceAPI) simulatedAnneling(trucks []Truck, orders []Order, Nmax int
 		Temp *= cooling
 		n++
 	}
-	// bestAssignment, sum(order.value) - bestF, error
+
 	return &TrucksAssignmentSolution{
-		BestTotalIncome: 0,
+		BestTotalIncome: orderRevenue - bestF,
 	}, nil
 }
 
-func (i *InstanceAPI) assignmentCost(assingment TrucksAssignment) float64 {
-	sum := 0.0
-	for _, truckId := range assingment {
-		truck, order := getTruck(truckId), getOrder(assignment[truckId])
-		sum += truck.FuelConsumption * computeDistance(truck.Location, order.Location)
+func (a *InstanceAPI) assignmentCost(orders []Order, assingment TrucksAssignment) (float32, error) {
+	var sum float32
+	for truckID, order := range assingment {
+		truck, err := a.getTruck(context.Background(), truckID)
+		if err != nil {
+			return 0, err
+		}
+		sum += computeDistance(truck.Location, order.Location_order) * truck.FuelConsumption
 	}
-	return sum
+	return sum, nil
 }
-
-// 1/capacity * order.value
-
-// min := 10
-// max := 30
-// fmt.Println(rand.Intn(max - min) + min)

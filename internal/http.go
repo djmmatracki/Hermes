@@ -2,12 +2,22 @@ package internal
 
 import (
 	"encoding/json"
+	"fmt"
+	"strconv"
 
 	"github.com/fasthttp/router"
 	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"gopkg.in/validator.v2"
 )
+
+type MatchOrdersRequest struct {
+	Orders            []Order `json:"orders"`
+	MaxIterations     int     `json:"max_iterations"`
+	StartTemperature  float32 `json:"start_temperature"`
+	FinishTemperature float32 `json:"finish_temperature"`
+	Cooling           float32 `json:"cooling"`
+}
 
 type HTTPInstanceAPI struct {
 	bind string
@@ -26,20 +36,14 @@ func NewHTTPInstanceAPI(bind string, log logrus.FieldLogger, api *InstanceAPI) *
 func (i *HTTPInstanceAPI) Run() {
 	r := router.New()
 
-	// Root endpoint
 	r.GET("/", i.handleRoot)
-	r.GET("/a-star", i.aStar)
 
-	// Truck endpoints
 	r.POST("/truck", i.addTruck)
 	r.GET("/truck", i.getTrucks)
+	r.GET("/truck/{truck_id}", i.getTruck)
 
-	// Order endpoints
-	r.POST("/order", i.addOrder)
-	r.GET("/order", i.getOrders)
-
-	// Generate optimal
 	r.POST("/single-launch", i.singleLaunch)
+	r.POST("/match-orders", i.matchOrders)
 
 	i.log.Infof("Starting server at port %s", i.bind)
 	i.log.Fatal(fasthttp.ListenAndServe(i.bind, r.Handler))
@@ -88,9 +92,6 @@ func (i *HTTPInstanceAPI) singleLaunch(ctx *fasthttp.RequestCtx) {
 	ctx.Response.SetBody(jsonResponse)
 	ctx.Response.SetStatusCode(200)
 }
-func (i *HTTPInstanceAPI) aStar(ctx *fasthttp.RequestCtx) {
-	ctx.Response.SetBodyString("Compiling a-star...")
-}
 
 func (i *HTTPInstanceAPI) addTruck(ctx *fasthttp.RequestCtx) {
 
@@ -129,43 +130,6 @@ func (i *HTTPInstanceAPI) addTruck(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-func (i *HTTPInstanceAPI) addOrder(ctx *fasthttp.RequestCtx) {
-
-	// Get response from api
-	var newOrder Order
-	collection := i.api.mongoDatabase.Collection("order")
-
-	body := ctx.Request.Body()
-	err := json.Unmarshal(body, &newOrder)
-
-	if err != nil {
-		i.log.Infof("Unable to unmarshal response: %v", err)
-		ctx.Response.SetBodyString("Invalid request sent")
-		ctx.Response.SetStatusCode(400)
-		return
-	}
-
-	// Data validation
-	err2 := validator.Validate(newOrder)
-	if err2 != nil {
-		ctx.Response.SetBodyString("Invelid input data")
-		ctx.Response.SetStatusCode(400)
-		return
-	}
-
-	// Execute insertion
-	_, err3 := collection.InsertOne(ctx, newOrder)
-	if err3 != nil {
-		ctx.Response.SetBodyString("Error while inserting order")
-		ctx.Response.SetStatusCode(400)
-		return
-	} else {
-		ctx.Response.SetBodyString("Inserted new order...")
-		ctx.Response.SetStatusCode(200)
-		return
-	}
-}
-
 func (i *HTTPInstanceAPI) getTrucks(ctx *fasthttp.RequestCtx) {
 	result, err := i.api.getTrucks(ctx)
 	if err != nil {
@@ -178,18 +142,64 @@ func (i *HTTPInstanceAPI) getTrucks(ctx *fasthttp.RequestCtx) {
 	ctx.Response.SetStatusCode(200)
 }
 
-func (i *HTTPInstanceAPI) getOrders(ctx *fasthttp.RequestCtx) {
-	result, err := i.api.getOrders(ctx)
-	if err != nil {
-		ctx.Response.SetBodyString("Cannot get orders")
-		ctx.Response.SetStatusCode(400)
+func (i *HTTPInstanceAPI) handleRoot(ctx *fasthttp.RequestCtx) {
+	ctx.Response.SetBodyString("Welcome to Hermes!")
+}
+
+func (i *HTTPInstanceAPI) matchOrders(ctx *fasthttp.RequestCtx) {
+	var matchOrdersRequest MatchOrdersRequest
+	body := ctx.Request.Body()
+	if err := json.Unmarshal(body, &matchOrdersRequest); err != nil {
+		i.log.Errorf("could't parse body in request")
 		return
 	}
-	body, _ := json.Marshal(result)
-	ctx.Response.SetBody(body)
+
+	solution, err := i.api.simulatedAnneling(
+		matchOrdersRequest.Orders,
+		matchOrdersRequest.MaxIterations,
+		matchOrdersRequest.StartTemperature,
+		matchOrdersRequest.FinishTemperature,
+		matchOrdersRequest.Cooling,
+		10,
+	)
+	if err != nil {
+		i.log.Errorf("error occured while executing anneling algorithm %v", err)
+		return
+	}
+
+	responseBody, err := json.Marshal(solution)
+	if err != nil {
+		i.log.Errorf("error occured while marshaling solution %v", err)
+		return
+	}
+	ctx.Response.SetBody(responseBody)
 	ctx.Response.SetStatusCode(200)
 }
 
-func (i *HTTPInstanceAPI) handleRoot(ctx *fasthttp.RequestCtx) {
-	ctx.Response.SetBodyString("Welcome to Hermes!")
+func (i *HTTPInstanceAPI) getTruck(ctx *fasthttp.RequestCtx) {
+	userTruckID := ctx.UserValue("truck_id").(string)
+	truckID, err := strconv.ParseInt(userTruckID, 10, 64)
+	if err != nil {
+		msg := fmt.Sprintf("error while parsing data: %v", err)
+		ctx.Response.SetBodyString(msg)
+		ctx.Response.SetStatusCode(400)
+		return
+	}
+
+	truck, err := i.api.getTruck(ctx, TruckID(truckID))
+	if err != nil {
+		msg := fmt.Sprintf("error while retriving from mongo: %v", err)
+		ctx.Response.SetBodyString(msg)
+		ctx.Response.SetStatusCode(400)
+		return
+	}
+	body, err := json.Marshal(truck)
+	if err != nil {
+		msg := fmt.Sprintf("error while retriving from mongo: %v", err)
+		ctx.Response.SetBodyString(msg)
+		ctx.Response.SetStatusCode(400)
+		return
+	}
+	ctx.Response.SetBody(body)
+	ctx.Response.SetStatusCode(200)
 }

@@ -1,9 +1,5 @@
 package internal
 
-import (
-	"time"
-)
-
 var Useful_tags = []string{"trunk", "primary", "motorway", "secondary"}
 var Max_speed_truck float32 = 75
 
@@ -17,7 +13,7 @@ type NodeID int64
 type UID int64
 type TruckID int64
 type OrderID int64
-type TrucksAssignment map[TruckID]OrderID
+type TrucksAssignment map[TruckID]Order
 
 type NeighbourData struct {
 	NeighbourId NodeID  `bson:"neigbour_id"`
@@ -60,14 +56,14 @@ type Fleet struct {
 }
 
 type Order struct {
-	Id                  UID       `json:"order_id" bson:"order_id"`
-	Location_order      Location  `json:"location_order" bson:"location_order"`
-	Location_to_deliver Location  `json:"location_to_deliver" bson:"location_to_deliver"`
-	Time_delivery       time.Time `json:"time_delivery" bson:"time_delivery" validate:"nonnil"`
-	Value               float32   `json:"value" bson:"value" validate:"min=0, nonnil, nonzero"`
-	Capacity            int       `json:"capacity" bson:"capacity" validate:"min=0, nonnil, nonzero"`
+	Id                  UID      `json:"order_id" bson:"order_id"`
+	Location_order      Location `json:"location_order" bson:"location_order"`
+	Location_to_deliver Location `json:"location_to_deliver" bson:"location_to_deliver"`
+	// Time_delivery       time.Time `json:"time_delivery" bson:"time_delivery" validate:"nonnil"`
+	Value    float32 `json:"value" bson:"value" validate:"min=0, nonnil, nonzero"`
+	Capacity int     `json:"capacity" bson:"capacity" validate:"min=0, nonnil, nonzero"`
 }
 
 type TrucksAssignmentSolution struct {
-	BestTotalIncome float32
+	BestTotalIncome float32 `json:"best_income"`
 }
