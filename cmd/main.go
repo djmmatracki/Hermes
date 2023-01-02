@@ -1,7 +1,9 @@
 package main
 
 import (
-	"Hermes/internal"
+	"Hermes/internal/api"
+	"Hermes/internal/http"
+	"Hermes/internal/providers"
 	"context"
 	"fmt"
 
@@ -19,11 +21,12 @@ const (
 
 func main() {
 	logger := logrus.New()
+	logger.SetLevel(logrus.TraceLevel)
 	server := createServerFromConfig(logger, ":8000")
 	server.Run()
 }
 
-func createServerFromConfig(logger *logrus.Logger, bind string) *internal.HTTPInstanceAPI {
+func createServerFromConfig(logger *logrus.Logger, bind string) *http.HTTPInstanceAPI {
 	viper.SetConfigFile(".env")
 	viper.ReadInConfig()
 
@@ -38,15 +41,18 @@ func createServerFromConfig(logger *logrus.Logger, bind string) *internal.HTTPIn
 		SetServerAPIOptions(serverAPIOptions)
 
 	client, err := mongo.Connect(context.Background(), clientOptions)
-
 	if err != nil {
 		logger.WithError(err).Fatal("could not instatiate ")
 	}
 
-	instanceAPI := internal.NewInstanceAPI(
-		logger.WithField("component", "api"),
+	dbController := providers.NewDBController(
+		logger.WithField("component", "db"),
 		client.Database(viper.GetString(confOptMongoDatabase)),
 	)
+	instanceAPI := api.NewInstanceAPI(
+		logger.WithField("component", "api"),
+		dbController,
+	)
 
-	return internal.NewHTTPInstanceAPI(bind, logger.WithField("component", "http"), instanceAPI)
+	return http.NewHTTPInstanceAPI(bind, logger.WithField("component", "http"), instanceAPI)
 }
