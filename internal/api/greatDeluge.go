@@ -5,7 +5,7 @@ import (
 	"math/rand"
 )
 
-func (a *InstanceAPI) greatDelugeAlgorithm(waterLevel, rainSpeed, groudLevel float64, numberLoops int) (*TrucksAssignmentSolution, error) {
+func (a *InstanceAPI) GreatDelugeAlgorithm(waterLevel, rainSpeed, groudLevel float64, numberLoops int) (*TrucksAssignmentSolution, error) {
 	var order1 OrderID
 	var order2 OrderID
 	assignment := make(TrucksAssignment)

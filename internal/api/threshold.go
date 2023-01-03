@@ -5,7 +5,7 @@ import (
 	"math/rand"
 )
 
-func (a *InstanceAPI) thresholdAccepting(threshold, thrReduction, numberLoops int) (*TrucksAssignmentSolution, error) {
+func (a *InstanceAPI) ThresholdAccepting(threshold, thrReduction, numberLoops int) (*TrucksAssignmentSolution, error) {
 	var order1 OrderID
 	var order2 OrderID
 	assignment := make(TrucksAssignment)
