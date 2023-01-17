@@ -10,6 +10,19 @@ func (a *InstanceAPI) GreatDelugeAlgorithm(waterLevel, rainSpeed, groudLevel flo
 	var order2 OrderID
 	assignment := make(TrucksAssignment)
 
+	if waterLevel <= 0 {
+		waterLevel = 1
+	}
+	if rainSpeed <= 0 {
+		rainSpeed = 1.5
+	}
+	if groudLevel <= 0 {
+		groudLevel = 10
+	}
+	if groudLevel < waterLevel {
+		groudLevel = waterLevel + 10
+	}
+
 	trucks, err := a.GetTrucks(context.Background())
 	if err != nil {
 		return nil, err

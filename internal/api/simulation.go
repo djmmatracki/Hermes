@@ -77,6 +77,22 @@ func (a *InstanceAPI) SimulatedAnneling(Nmax int, TStart, TFinal, cooling, k flo
 	var order2 OrderID
 	assignment := make(TrucksAssignment)
 
+	if Nmax <= 0 {
+		Nmax = 5
+	}
+	if TStart <= 0 {
+		TStart = 10
+	}
+	if TFinal <= 0 {
+		TFinal = 2
+	}
+	if TStart <= TFinal {
+		TStart = TFinal + 1
+	}
+	if cooling <= 0 {
+		cooling = 0.9
+	}
+
 	trucks, err := a.GetTrucks(context.Background())
 	if err != nil {
 		a.log.Error("Error while getting trucks")
@@ -171,7 +187,7 @@ func (a *InstanceAPI) costAssignment(orders []providers.Order, assingment Trucks
 			a.log.Error("Error while getting order")
 			return 0, err
 		}
-		sum += order.Value - computeDistance(truck.Location, order.Origin)
+		sum += math.Exp(computeDistance(truck.Location, order.Origin)*(-0.3)) * order.Value
 	}
 	return -sum, nil
 }

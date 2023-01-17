@@ -10,6 +10,13 @@ func (a *InstanceAPI) ThresholdAccepting(threshold, thrReduction, numberLoops in
 	var order2 OrderID
 	assignment := make(TrucksAssignment)
 
+	if threshold <= 0 {
+		threshold = 20
+	}
+	if thrReduction <= 0 {
+		thrReduction = 1
+	}
+
 	trucks, err := a.GetTrucks(context.Background())
 	if err != nil {
 		return nil, err
