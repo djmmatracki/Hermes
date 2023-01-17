@@ -1,10 +1,14 @@
-FROM golang:1.19.4-alpine3.17
+FROM golang:1.19
 
 WORKDIR /usr/src/app
 
+ENV GOOS=linux
+ENV CGO_ENABLED=0
+
 COPY go.mod go.sum ./
-RUN go mod download && go mod verify
+RUN go mod download
 
 COPY . .
-ENTRYPOINT go run ./cmd/main.go
-EXPOSE 8000
+RUN go build -ldflags '-w -s' -a -installsuffix cgo -o webserver cmd/main.go
+
+CMD ["/usr/src/app/webserver"]

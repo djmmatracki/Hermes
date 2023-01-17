@@ -61,6 +61,8 @@ func (i *HTTPInstanceAPI) Run() {
 	api.GET("/city", i.getCities)
 
 	api.POST("/simulate", i.simulate)
+	api.POST("/threshold", i.threshold)
+	api.POST("/great-deluge", i.greatDeluge)
 
 	i.log.Infof("Starting server at port %s", i.bind)
 	i.log.Fatal(fasthttp.ListenAndServe(i.bind, r.Handler))

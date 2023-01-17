@@ -14,7 +14,7 @@ func (d *DBController) GetTrucks(ctx context.Context) ([]Truck, error) {
 	collection := d.db.Collection("truck")
 	cur, err := collection.Find(ctx, bson.D{})
 	if err != nil {
-		d.log.Errorf("error while executing get trucks query")
+		d.log.Errorf("error while executing get trucks query %v", err)
 		return nil, fmt.Errorf("error while executing get trucks query")
 	}
 	if err = cur.All(context.TODO(), &results); err != nil {

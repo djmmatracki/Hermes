@@ -19,6 +19,7 @@ func (i *HTTPInstanceAPI) addOrder(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	i.log.Debugf("Got order %+v", order)
 	if err := i.api.AddOrder(&order); err != nil {
 		i.log.Errorf("Unable to add order: %v", err)
 		ctx.Response.SetBodyString("Invalid request sent")

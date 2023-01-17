@@ -88,4 +88,5 @@ func (i *HTTPInstanceAPI) simulate(ctx *fasthttp.RequestCtx) {
 	}
 	ctx.Response.SetBody(responseBody)
 	ctx.Response.SetStatusCode(200)
+	handleRequest(ctx)
 }

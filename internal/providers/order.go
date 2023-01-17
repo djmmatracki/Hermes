@@ -11,7 +11,9 @@ import (
 
 func (d *DBController) AddOrder(order *Order) error {
 	collection := d.db.Collection("orders")
-	order.Id = UID(rand.Intn(10000))
+	orderId := int64(rand.Intn(10000))
+	d.log.Debugf("got order id %d", orderId)
+	order.Id = UID(orderId)
 	if _, err := collection.InsertOne(context.TODO(), order); err != nil {
 		return err
 	}
@@ -23,7 +25,7 @@ func (d *DBController) GetOrders(ctx context.Context) ([]Order, error) {
 	collection := d.db.Collection("orders")
 	cur, err := collection.Find(ctx, bson.D{})
 	if err != nil {
-		d.log.Errorf("error while executing get orders query")
+		d.log.Errorf("error while executing get orders query %v", err)
 		return nil, fmt.Errorf("error while executing get orders query")
 	}
 	if err = cur.All(context.TODO(), &results); err != nil {
@@ -35,7 +37,8 @@ func (d *DBController) GetOrders(ctx context.Context) ([]Order, error) {
 
 func (d *DBController) GetOrder(orderID int64) (*Order, error) {
 	var order Order
-	collection := d.db.Collection("order")
+	collection := d.db.Collection("orders")
+	d.log.Debugf("get order %d", orderID)
 	result := collection.FindOne(
 		context.Background(),
 		bson.D{{"order_id", orderID}},

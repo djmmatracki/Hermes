@@ -27,12 +27,15 @@ func main() {
 }
 
 func createServerFromConfig(logger *logrus.Logger, bind string) *http.HTTPInstanceAPI {
-	viper.SetConfigFile(".env")
+	viper.AddConfigPath("/config")
+	viper.AddConfigPath(".")
+	viper.SetConfigName("app")
+	viper.SetConfigType("env")
 	viper.ReadInConfig()
 
 	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
 	mongoURI := fmt.Sprintf(
-		"mongodb+srv://%s:%s@cluster1.yhqlj.mongodb.net/?retryWrites=true&w=majority",
+		"mongodb+srv://%s:%s@cluster1.yhqlj.mongodb.net/?retryWrites=true&w=majority&ssl=true",
 		viper.GetString(confOptMongoUser),
 		viper.GetString(confOptMongoPassword))
 
