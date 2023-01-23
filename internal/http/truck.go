@@ -27,6 +27,7 @@ func (i *HTTPInstanceAPI) getTruck(ctx *fasthttp.RequestCtx) {
 		ctx.Response.SetStatusCode(400)
 		return
 	}
+	// Added different comment
 
 	body, err := json.Marshal(truck)
 	if err != nil {
