@@ -37,6 +37,7 @@ func (i *HTTPInstanceAPI) getTruck(ctx *fasthttp.RequestCtx) {
 		return
 	}
 	ctx.Response.SetBody(body)
+	ctx.Response.Header.Add("Content-type", "application/json")
 	ctx.Response.SetStatusCode(200)
 }
 
